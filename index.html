@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17231e">
+  <meta name="description" content="요리 시간을 놓치지 않는 간편한 주방 타이머">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <title>한 끗 타이머 | Cooking Timer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Gowun+Dodum&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --ink:#17231e; --pine:#264c3d; --lime:#d7ef7c; --cream:#f6f1e8; --paper:#fffdf8; --muted:#6f766f; --line:#dde2d9; --orange:#f27d42; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-width:320px; background:var(--cream); color:var(--ink); font-family:"Gowun Dodum",sans-serif; }
+    button,input { font:inherit; }
+    button { cursor:pointer; }
+    .shell { max-width:1160px; margin:0 auto; padding:0 28px 44px; }
+    header { height:78px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(23,35,30,.16); }
+    .header-actions { display:flex; align-items:center; gap:13px; }
+    .brand { font-family:Outfit,sans-serif; font-size:1.3rem; font-weight:800; letter-spacing:-.07em; }
+    .brand b { color:var(--orange); }
+    .header-note { color:var(--muted); font-family:"DM Mono",monospace; font-size:.7rem; letter-spacing:.04em; }
+    .install-button { display:none; min-height:34px; padding:0 11px; border:1px solid var(--pine); border-radius:999px; background:var(--paper); color:var(--pine); font-size:.72rem; font-weight:700; }
+    .install-button:hover { background:var(--pine); color:white; }
+    .install-button.available { display:inline-flex; align-items:center; gap:5px; }
+    main { padding-top:42px; }
+    .intro { display:flex; justify-content:space-between; gap:30px; align-items:end; margin-bottom:30px; }
+    .eyebrow { margin:0 0 10px; color:var(--pine); font-family:"DM Mono",monospace; font-size:.68rem; letter-spacing:.09em; }
+    h1 { margin:0; font-family:Outfit,sans-serif; font-size:clamp(2.4rem,5vw,4.5rem); line-height:.96; letter-spacing:-.08em; }
+    .intro p:last-child { max-width:310px; margin:0; color:var(--muted); font-size:.88rem; line-height:1.8; }
+    .app { display:grid; grid-template-columns:minmax(330px,1.1fr) minmax(280px,.9fr); gap:18px; }
+    .panel { border:1px solid var(--line); border-radius:14px; background:var(--paper); }
+    .timer-panel { min-height:490px; position:relative; overflow:hidden; padding:29px; background:var(--ink); color:var(--paper); }
+    .timer-panel::before { content:""; position:absolute; width:420px; height:420px; top:-240px; right:-130px; border-radius:50%; background:var(--pine); opacity:.72; }
+    .timer-panel::after { content:""; position:absolute; width:220px; height:220px; bottom:-160px; left:-65px; border:1px solid rgba(215,239,124,.35); border-radius:50%; }
+    .timer-top { position:relative; z-index:1; display:flex; justify-content:space-between; align-items:center; }
+    .active-label { color:var(--lime); font-family:"DM Mono",monospace; font-size:.7rem; letter-spacing:.06em; }
+    .sound-status { color:#c8d1cb; font-size:.74rem; }
+    .clock { position:relative; z-index:1; display:grid; place-items:center; min-height:280px; text-align:center; }
+    .clock-ring { position:absolute; width:250px; height:250px; border:1px solid rgba(255,255,255,.17); border-radius:50%; }
+    .clock-ring::after { content:""; position:absolute; inset:11px; border:3px solid var(--lime); border-right-color:rgba(215,239,124,.14); border-bottom-color:rgba(215,239,124,.14); border-radius:50%; transform:rotate(-45deg); }
+    .time { position:relative; font-family:Outfit,sans-serif; font-size:clamp(4.3rem,8vw,6.4rem); font-weight:700; line-height:1; letter-spacing:-.08em; font-variant-numeric:tabular-nums; }
+    .timer-name { position:relative; min-height:24px; margin-top:12px; color:#dbe3dd; font-size:.88rem; }
+    .timer-actions { position:relative; z-index:1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; }
+    .button { min-height:48px; border:0; border-radius:8px; font-weight:700; transition:transform .16s ease, background .16s ease; }
+    .button:hover { transform:translateY(-2px); }
+    .button-primary { background:var(--lime); color:var(--ink); }
+    .button-secondary { border:1px solid rgba(255,255,255,.24); background:transparent; color:var(--paper); }
+    .button-danger { background:rgba(255,255,255,.09); color:#f5d6cf; }
+    .presets { padding:24px; }
+    .panel-title { display:flex; justify-content:space-between; align-items:baseline; margin:0 0 16px; }
+    .panel-title h2 { margin:0; font-family:Outfit,sans-serif; font-size:1.25rem; letter-spacing:-.05em; }
+    .panel-title span { color:var(--muted); font-family:"DM Mono",monospace; font-size:.65rem; }
+    .quick-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; }
+    .preset { display:flex; min-height:76px; flex-direction:column; justify-content:space-between; padding:12px; border:1px solid var(--line); border-radius:9px; background:#fff; color:var(--ink); text-align:left; }
+    .preset:hover { border-color:var(--pine); background:#f7fbec; }
+    .preset strong { font-family:Outfit,sans-serif; font-size:1.05rem; letter-spacing:-.04em; }
+    .preset small { color:var(--muted); font-family:"DM Mono",monospace; font-size:.65rem; }
+    .custom { margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }
+    .custom label { display:block; margin-bottom:8px; color:var(--muted); font-size:.76rem; }
+    .input-row { display:grid; grid-template-columns:1fr auto; gap:8px; }
+    .input-row input { min-width:0; height:46px; padding:0 12px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); outline-color:var(--pine); }
+    .input-row button { padding:0 16px; border:0; border-radius:8px; background:var(--pine); color:white; font-weight:700; }
+    .food-section { margin-top:18px; padding:24px; }
+    .food-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; }
+    .food-preset { position:relative; min-height:105px; overflow:hidden; padding:13px; border:1px solid var(--line); border-radius:9px; background:var(--paper); color:var(--ink); text-align:left; }
+    .food-preset:hover { border-color:var(--orange); }
+    .food-preset .emoji { display:block; margin-bottom:8px; font-size:1.3rem; }
+    .food-preset strong { display:block; font-size:.84rem; }
+    .food-preset small { display:block; margin-top:3px; color:var(--muted); font-family:"DM Mono",monospace; font-size:.64rem; }
+    .food-preset .interval { position:absolute; right:7px; bottom:7px; padding:3px 5px; border-radius:4px; background:#fce3d6; color:#9c3d17; font-size:.57rem; }
+    .guide { margin-top:18px; padding:17px 20px; border-left:4px solid var(--orange); background:#fff8f2; color:#73513f; font-size:.76rem; line-height:1.65; }
+    .guide b { color:#6d3117; }
+    .notice { margin:20px 0 0; color:var(--muted); font-size:.7rem; line-height:1.7; }
+    .toast { position:fixed; z-index:10; left:50%; bottom:24px; max-width:calc(100vw - 32px); padding:13px 18px; transform:translate(-50%,120px); border-radius:999px; background:var(--ink); color:#fff; box-shadow:0 10px 28px rgba(0,0,0,.25); font-size:.82rem; opacity:0; transition:.25s ease; }
+    .toast.show { transform:translate(-50%,0); opacity:1; }
+    @media (max-width:780px) { .shell { padding:0 18px 34px; } .header-note { display:none; } main { padding-top:30px; } .intro { display:block; margin-bottom:22px; } .intro p:last-child { margin-top:16px; } .app { grid-template-columns:1fr; } .food-grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:400px) { .timer-panel { padding:22px; } .food-grid { grid-template-columns:1fr 1fr; } .clock-ring { width:220px; height:220px; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand">한 <b>끗</b> 타이머</div>
+      <div class="header-actions"><div class="header-note">KITCHEN TIMER / OFFLINE FRIENDLY</div><button class="install-button" id="installButton" type="button">⊕ 안드로이드에 설치</button></div>
+    </header>
+    <main>
+      <section class="intro"><div><p class="eyebrow">COOK WITH CONFIDENCE</p><h1>맛있는 순간을<br>놓치지 마세요.</h1></div><p>기본 타이머부터 자주 쓰는 조리 시간까지. 시간을 고르고 시작하면, 화면과 소리로 알려드립니다.</p></section>
+      <div class="app">
+        <section class="panel timer-panel" aria-label="현재 타이머">
+          <div class="timer-top"><span class="active-label" id="activeLabel">READY TO COOK</span><span class="sound-status" id="soundStatus">🔔 소리 알림 켜짐</span></div>
+          <div class="clock"><span class="clock-ring" aria-hidden="true"></span><div><div class="time" id="display" aria-live="polite">00:00</div><div class="timer-name" id="timerName">시간을 선택해 주세요</div></div></div>
+          <div class="timer-actions"><button class="button button-primary" id="startButton">시작</button><button class="button button-secondary" id="pauseButton">일시정지</button><button class="button button-danger" id="resetButton">초기화</button></div>
+        </section>
+        <section class="panel presets">
+          <div class="panel-title"><h2>기본 타이머</h2><span>QUICK START</span></div>
+          <div class="quick-grid" id="quickGrid"></div>
+          <div class="custom"><label for="customMinutes">직접 설정 (분 단위)</label><div class="input-row"><input id="customMinutes" type="number" inputmode="numeric" min="1" max="1440" placeholder="예: 45"><button id="customButton">설정</button></div></div>
+          <p class="notice">알림을 받으려면 이 페이지를 열어 두고, 브라우저의 소리 재생을 허용해 주세요.</p>
+        </section>
+      </div>
+      <section class="panel food-section">
+        <div class="panel-title"><h2>요리 프리셋</h2><span>SELECT &amp; START</span></div>
+        <div class="food-grid" id="foodGrid"></div>
+        <div class="guide"><b>안전 안내:</b> 조리 시간은 제품·양·화력에 따라 달라집니다. 라면과 파스타는 포장지 조리법을 우선 확인하세요. 육류·가금류·계란 요리는 시간만으로 판단하지 말고 중심 온도와 익힘 상태를 함께 확인하세요.</div>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="assertive"></div>
+  <script>
+    const quickPresets = [
+      { name: "5분", seconds: 300 }, { name: "10분", seconds: 600 },
+      { name: "20분", seconds: 1200 }, { name: "30분", seconds: 1800 }
+    ];
+    const foodPresets = [
+      { name:"라면", detail:"4분", seconds:240, emoji:"🍜" },
+      { name:"파스타", detail:"8분", seconds:480, emoji:"🍝" },
+      { name:"반숙 달걀", detail:"7분", seconds:420, emoji:"🥚" },
+      { name:"완숙 달걀", detail:"12분", seconds:720, emoji:"🥚" },
+      { name:"냉동만두", detail:"7분", seconds:420, emoji:"🥟" },
+      { name:"에어프라이 감자", detail:"20분", seconds:1200, emoji:"🥔" },
+      { name:"오븐 쿠키", detail:"12분", seconds:720, emoji:"🍪" },
+      { name:"밥 뜸들이기", detail:"10분", seconds:600, emoji:"🍚" },
+      { name:"달걀 굽기", detail:"1시간 · 15분 알림", seconds:3600, interval:900, emoji:"🍳" }
+    ];
+    const presetByQuery = { ramen: foodPresets[0], pasta: foodPresets[1] };
+    const display = document.querySelector('#display');
+    const timerName = document.querySelector('#timerName');
+    const activeLabel = document.querySelector('#activeLabel');
+    const toast = document.querySelector('#toast');
+    let totalSeconds = 0, remainingSeconds = 0, timerId = null, timerTitle = '', intervalSeconds = 0, nextInterval = 0, audioContext = null;
+    const format = seconds => `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(seconds % 60).padStart(2,'0')}`;
+    const updateDisplay = () => { display.textContent = format(remainingSeconds); document.title = remainingSeconds ? `${format(remainingSeconds)} · 한 끗 타이머` : '한 끗 타이머 | Cooking Timer'; };
+    const showToast = message => { toast.textContent = message; toast.classList.add('show'); clearTimeout(showToast.timeout); showToast.timeout = setTimeout(() => toast.classList.remove('show'), 3400); };
+    function chime(final = false) {
+      try { audioContext ||= new AudioContext(); const now = audioContext.currentTime; [0, .18, .36].forEach((offset, index) => { const oscillator = audioContext.createOscillator(); const gain = audioContext.createGain(); oscillator.frequency.value = final ? [659,784,1047][index] : 784; gain.gain.setValueAtTime(.0001, now + offset); gain.gain.exponentialRampToValueAtTime(.13, now + offset + .02); gain.gain.exponentialRampToValueAtTime(.0001, now + offset + .15); oscillator.connect(gain).connect(audioContext.destination); oscillator.start(now + offset); oscillator.stop(now + offset + .17); }); } catch (_) {}
+    }
+    function setTimer(seconds, title, interval = 0) { clearInterval(timerId); timerId = null; totalSeconds = remainingSeconds = seconds; timerTitle = title; intervalSeconds = interval; nextInterval = interval ? seconds - interval : 0; timerName.textContent = title; activeLabel.textContent = 'READY TO COOK'; updateDisplay(); }
+    function finishTimer() { clearInterval(timerId); timerId = null; remainingSeconds = 0; updateDisplay(); activeLabel.textContent = 'DONE!'; chime(true); showToast(`✨ ${timerTitle || '타이머'} 완료! 맛있게 드세요.`); if (navigator.vibrate) navigator.vibrate([180, 80, 180, 80, 350]); }
+    function startTimer() { if (!remainingSeconds) { showToast('먼저 시간을 선택해 주세요.'); return; } if (timerId) return; audioContext ||= new AudioContext(); activeLabel.textContent = 'COOKING IN PROGRESS'; timerId = setInterval(() => { remainingSeconds--; if (intervalSeconds && remainingSeconds === nextInterval && remainingSeconds > 0) { chime(); showToast(`⏱ ${timerTitle}: ${format(remainingSeconds)} 남음`); nextInterval -= intervalSeconds; } updateDisplay(); if (remainingSeconds <= 0) finishTimer(); }, 1000); }
+    function pauseTimer() { if (!timerId) return; clearInterval(timerId); timerId = null; activeLabel.textContent = 'PAUSED'; showToast('타이머를 일시정지했어요.'); }
+    document.querySelector('#quickGrid').innerHTML = quickPresets.map(p => `<button class="preset" data-seconds="${p.seconds}" data-name="기본 ${p.name}"><strong>${p.name}</strong><small>SET TIMER →</small></button>`).join('');
+    document.querySelector('#foodGrid').innerHTML = foodPresets.map(p => `<button class="food-preset" data-seconds="${p.seconds}" data-name="${p.name}" data-interval="${p.interval || 0}"><span class="emoji">${p.emoji}</span><strong>${p.name}</strong><small>${p.detail}</small>${p.interval ? '<span class="interval">15분마다 알림</span>' : ''}</button>`).join('');
+    document.addEventListener('click', event => { const preset = event.target.closest('[data-seconds]'); if (!preset) return; setTimer(Number(preset.dataset.seconds), preset.dataset.name, Number(preset.dataset.interval || 0)); showToast(`${preset.dataset.name} 타이머를 설정했어요.`); });
+    document.querySelector('#startButton').addEventListener('click', startTimer);
+    document.querySelector('#pauseButton').addEventListener('click', pauseTimer);
+    document.querySelector('#resetButton').addEventListener('click', () => { if (totalSeconds) setTimer(totalSeconds, timerTitle, intervalSeconds); else setTimer(0, '시간을 선택해 주세요'); showToast('타이머를 초기화했어요.'); });
+    document.querySelector('#customButton').addEventListener('click', () => { const input = document.querySelector('#customMinutes'); const minutes = Number(input.value); if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) { showToast('1~1,440분 사이의 시간을 입력해 주세요.'); input.focus(); return; } setTimer(minutes * 60, `직접 설정 · ${minutes}분`); showToast(`${minutes}분 타이머를 설정했어요.`); });
+    const installButton = document.querySelector('#installButton');
+    let installPrompt;
+    window.addEventListener('beforeinstallprompt', event => {
+      event.preventDefault();
+      installPrompt = event;
+      installButton.classList.add('available');
+    });
+    installButton.addEventListener('click', async () => {
+      if (!installPrompt) { showToast('Chrome 메뉴에서 “앱 설치” 또는 “홈 화면에 추가”를 선택해 주세요.'); return; }
+      installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      showToast(outcome === 'accepted' ? '한 끗 타이머를 설치했어요.' : '설치가 취소되었어요.');
+      installPrompt = null;
+      installButton.classList.remove('available');
+    });
+    window.addEventListener('appinstalled', () => { installPrompt = null; installButton.classList.remove('available'); showToast('한 끗 타이머가 기기에 설치되었습니다.'); });
+    if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
+    const requestedPreset = presetByQuery[new URLSearchParams(location.search).get('preset')];
+    if (requestedPreset) setTimer(requestedPreset.seconds, requestedPreset.name, requestedPreset.interval || 0);
+    else updateDisplay();
+  </script>
+</body>
+</html>
